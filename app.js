@@ -867,6 +867,134 @@
     $("#filterMeta").textContent = `${state.type} income · ${state.month} ${state.year} · ${fmtPeople(tot.n)} people · ${fmtMoneyExact(tot.totalIncome)} total`;
   }
 
+  /* ─── Table renderers (one per chart) ──────────────────── */
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  function renderHistTable(buckets, ranges, summary) {
+    const root = $("#histTable");
+    const total = summary.n || 1;
+    const totalInc = summary.totalIncome || 1;
+    let html = `<table class="data-table"><caption>${state.type} · ${state.month} ${state.year} — ${nfInt.format(summary.n)} people across ${ranges.length} brackets</caption>`;
+    html += `<thead><tr><th>Bracket (₾)</th><th>People</th><th>Share</th><th>Avg in bracket</th><th>Total income</th><th>Income share</th></tr></thead><tbody>`;
+    for (let i = 0; i < buckets.length; i++) {
+      const r = ranges[i];
+      const [c, inc] = buckets[i];
+      const avg = c > 0 ? inc / c : 0;
+      const cls = state.activeBracket === i ? "highlight" : "";
+      html += `<tr class="${cls}">`
+        + `<td>${escapeHtml(fmtRange(r))}</td>`
+        + `<td>${nfInt.format(c)}</td>`
+        + `<td>${fmtPct(c / total, 2)}</td>`
+        + `<td>${c > 0 ? fmtMoneyExact(avg) : "—"}</td>`
+        + `<td>${fmtMoneyExact(inc)}</td>`
+        + `<td>${fmtPct(inc / totalInc, 2)}</td>`
+        + `</tr>`;
+    }
+    html += `</tbody></table>`;
+    root.innerHTML = html;
+  }
+
+  function renderLorenzTable(buckets, ranges, summary) {
+    const root = $("#lorenzTable");
+    const { n, inc } = totals(buckets);
+    let html = `<table class="data-table"><caption>Cumulative population vs cumulative income — Gini = ${summary.gini.toFixed(3)}</caption>`;
+    html += `<thead><tr><th>Up to bracket</th><th>People (cum.)</th><th>Cum. % people</th><th>Income (cum.)</th><th>Cum. % income</th></tr></thead><tbody>`;
+    let cumP = 0, cumI = 0;
+    for (let i = 0; i < buckets.length; i++) {
+      const [c, ii] = buckets[i];
+      cumP += c; cumI += ii;
+      const r = ranges[i];
+      const upTo = r.hi === null ? "≥ ₾" + nfInt.format(r.lo) : "< ₾" + nfInt.format(r.hi);
+      html += `<tr>`
+        + `<td>${escapeHtml(upTo)}</td>`
+        + `<td>${nfInt.format(cumP)}</td>`
+        + `<td>${n ? fmtPct(cumP / n, 2) : "—"}</td>`
+        + `<td>${fmtMoneyExact(cumI)}</td>`
+        + `<td>${inc ? fmtPct(cumI / inc, 2) : "—"}</td>`
+        + `</tr>`;
+    }
+    html += `</tbody></table>`;
+    root.innerHTML = html;
+  }
+
+  function renderTrendTable() {
+    const root = $("#trendTable");
+    const series = computeTrendSeries();
+    if (series.length === 0) { root.innerHTML = `<div class="table-empty">No data for this slice.</div>`; return; }
+    const metricLabel = $("#trendMetric").options[$("#trendMetric").selectedIndex].textContent;
+    let html = `<table class="data-table"><caption>${metricLabel} of ${state.type} · ${state.month}, year-by-year</caption>`;
+    html += `<thead><tr><th>Year</th><th>${escapeHtml(metricLabel)}</th></tr></thead><tbody>`;
+    for (const s of series) {
+      const lbl = state.trendMetric === "gini" ? s.val.toFixed(3)
+                : state.trendMetric === "people" ? nfInt.format(s.val)
+                : fmtMoneyExact(s.val);
+      html += `<tr><td>${s.y}</td><td>${lbl}</td></tr>`;
+    }
+    html += `</tbody></table>`;
+    root.innerHTML = html;
+  }
+
+  function renderCompareTable() {
+    const root = $("#compareTable");
+    const series = buildCompareSeries();
+    if (series.length === 0) { root.innerHTML = `<div class="table-empty">Pick at least one income type above.</div>`; return; }
+    const allYears = [...new Set(series.flatMap((s) => s.pts.map((p) => p.y)))].sort((a, b) => a - b);
+    const metricLabel = $("#compareMetric").options[$("#compareMetric").selectedIndex].textContent;
+    let html = `<table class="data-table"><caption>${metricLabel} for ${state.month}, by income type</caption>`;
+    html += `<thead><tr><th>Year</th>`;
+    for (const s of series) {
+      html += `<th><span class="swatch" style="background:${s.color}"></span>${escapeHtml(s.type)}</th>`;
+    }
+    html += `</tr></thead><tbody>`;
+    for (const y of allYears) {
+      html += `<tr><td>${y}</td>`;
+      for (const s of series) {
+        const p = s.pts.find((q) => q.y === y);
+        html += `<td>${p ? metricFmt(p.val, state.compareMetric) : "—"}</td>`;
+      }
+      html += `</tr>`;
+    }
+    html += `</tbody></table>`;
+    root.innerHTML = html;
+  }
+
+  function renderBreakdownTable() {
+    const root = $("#breakdownTable");
+    const items = [];
+    for (const t of D.types) {
+      const r = findRecord(state.year, state.month, t);
+      if (!r) continue;
+      const tot = totals(r.b);
+      if (tot.n === 0) continue;
+      const s = summarize(r, D.ranges);
+      items.push({ t, n: tot.n, inc: tot.inc, mean: tot.n ? tot.inc / tot.n : 0, median: s.median });
+    }
+    items.sort((a, b) => b.n - a.n);
+    if (items.length === 0) {
+      root.innerHTML = `<div class="table-empty">No data for this month.</div>`;
+      return;
+    }
+    const totalPeople = items.find((it) => it.t === "All")?.n || items.reduce((sum, it) => sum + (it.t !== "All" ? it.n : 0), 0);
+    let html = `<table class="data-table"><caption>${state.month} ${state.year} · all available income types</caption>`;
+    html += `<thead><tr><th>Type</th><th>People</th><th>% of "All"</th><th>Median</th><th>Mean</th><th>Total income</th></tr></thead><tbody>`;
+    for (const it of items) {
+      const swatch = `<span class="swatch" style="background:${colorFor(it.t)}"></span>`;
+      const pct = totalPeople ? fmtPct(it.n / totalPeople, 1) : "—";
+      html += `<tr>`
+        + `<td>${swatch}${escapeHtml(it.t)}</td>`
+        + `<td>${nfInt.format(it.n)}</td>`
+        + `<td>${pct}</td>`
+        + `<td>${fmtMoneyExact(it.median)}</td>`
+        + `<td>${fmtMoneyExact(it.mean)}</td>`
+        + `<td>${fmtMoney(it.inc)}</td>`
+        + `</tr>`;
+    }
+    html += `</tbody></table>`;
+    root.innerHTML = html;
+  }
+
   /* ─── Master render ────────────────────────────────────── */
   function render() {
     refreshFilters();
@@ -887,6 +1015,12 @@
     drawTypeBreakdown();
     refreshStand(summary, record);
     generateInsights(summary);
+    // Tables — always rebuild so they reflect current slice when toggled.
+    renderHistTable(record.b, D.ranges, summary);
+    renderLorenzTable(record.b, D.ranges, summary);
+    renderTrendTable();
+    renderCompareTable();
+    renderBreakdownTable();
   }
 
   /* ─── Wiring ───────────────────────────────────────────── */
@@ -894,7 +1028,34 @@
   $("#filterMonth").addEventListener("change", (e) => { state.month = e.target.value; state.activeBracket = null; render(); });
   $("#filterType").addEventListener("change", (e) => { state.type = e.target.value; state.activeBracket = null; render(); });
   $("#trendMetric").addEventListener("change", (e) => { state.trendMetric = e.target.value; drawTrend(); });
-  $("#compareMetric").addEventListener("change", (e) => { state.compareMetric = e.target.value; drawCompareChart(); });
+  $("#compareMetric").addEventListener("change", (e) => { state.compareMetric = e.target.value; drawCompareChart(); renderCompareTable(); });
+
+  // Trend metric also needs to update its table
+  $("#trendMetric").addEventListener("change", () => { renderTrendTable(); });
+
+  // Chart ↔ Table view toggles
+  $$(".view-toggle").forEach((toggle) => {
+    toggle.addEventListener("click", (e) => {
+      const btn = e.target.closest(".vt-btn");
+      if (!btn) return;
+      const view = btn.dataset.view;
+      const card = toggle.closest(".chartcard");
+      card.dataset.view = view;
+      toggle.querySelectorAll(".vt-btn").forEach((b) => b.classList.toggle("active", b === btn));
+      // If switching back to chart view, the chart may have rendered with a stale 0×0 size
+      // (because the container was display:none). Re-draw to fit current dimensions.
+      if (view === "chart") {
+        const target = toggle.dataset.target;
+        const record = findRecord(state.year, state.month, state.type);
+        if (!record) return;
+        const summary = summarize(record, D.ranges);
+        if (target === "hist") drawHistogram(record.b, D.ranges, summary);
+        else if (target === "lorenz") drawLorenz(summary);
+        else if (target === "trend") drawTrend();
+        else if (target === "compare") drawCompareChart();
+      }
+    });
+  });
 
   let standDebounce;
   $("#standInput").addEventListener("input", (e) => {

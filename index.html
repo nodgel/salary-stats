@@ -98,37 +98,55 @@
     </section>
 
     <!-- Distribution histogram -->
-    <section class="card chartcard" aria-label="Distribution">
+    <section class="card chartcard" aria-label="Distribution" data-view="chart">
       <div class="card-head">
         <h2>📐 Income distribution</h2>
+        <div class="view-toggle" data-target="hist" role="tablist" aria-label="View as">
+          <button class="vt-btn active" data-view="chart" type="button">Chart</button>
+          <button class="vt-btn" data-view="table" type="button">Table</button>
+        </div>
         <p class="card-sub">Number of people in each income bracket. Tap a bar for details.</p>
       </div>
-      <div class="chart-wrap">
-        <svg id="histChart" class="chart" aria-label="Histogram"></svg>
+      <div class="chart-view">
+        <div class="chart-wrap">
+          <svg id="histChart" class="chart" aria-label="Histogram"></svg>
+        </div>
+        <div class="chart-legend">
+          <span class="legend-pill"><span class="dot" style="background:var(--accent)"></span>Population</span>
+          <span class="legend-pill"><span class="dot" style="background:var(--accent-2)"></span>Selected bracket</span>
+        </div>
+        <div id="bracketDetail" class="bracket-detail" hidden></div>
       </div>
-      <div class="chart-legend">
-        <span class="legend-pill"><span class="dot" style="background:var(--accent)"></span>Population</span>
-        <span class="legend-pill"><span class="dot" style="background:var(--accent-2)"></span>Selected bracket</span>
-      </div>
-      <div id="bracketDetail" class="bracket-detail" hidden></div>
+      <div class="table-view" id="histTable"></div>
     </section>
 
     <!-- Lorenz curve -->
-    <section class="card chartcard" aria-label="Lorenz curve">
+    <section class="card chartcard" aria-label="Lorenz curve" data-view="chart">
       <div class="card-head">
         <h2>📉 Inequality (Lorenz curve)</h2>
+        <div class="view-toggle" data-target="lorenz" role="tablist" aria-label="View as">
+          <button class="vt-btn active" data-view="chart" type="button">Chart</button>
+          <button class="vt-btn" data-view="table" type="button">Table</button>
+        </div>
         <p class="card-sub">How far the income share strays from a perfectly equal line. The bigger the gap, the higher the Gini.</p>
       </div>
-      <div class="chart-wrap square">
-        <svg id="lorenzChart" class="chart" viewBox="0 0 400 400" aria-label="Lorenz curve"></svg>
+      <div class="chart-view">
+        <div class="chart-wrap square">
+          <svg id="lorenzChart" class="chart" viewBox="0 0 400 400" aria-label="Lorenz curve"></svg>
+        </div>
+        <div class="lorenz-stats" id="lorenzStats"></div>
       </div>
-      <div class="lorenz-stats" id="lorenzStats"></div>
+      <div class="table-view" id="lorenzTable"></div>
     </section>
 
     <!-- Year trend -->
-    <section class="card chartcard" aria-label="Year trend">
+    <section class="card chartcard" aria-label="Year trend" data-view="chart">
       <div class="card-head">
         <h2>📅 Across the years</h2>
+        <div class="view-toggle" data-target="trend" role="tablist" aria-label="View as">
+          <button class="vt-btn active" data-view="chart" type="button">Chart</button>
+          <button class="vt-btn" data-view="table" type="button">Table</button>
+        </div>
         <p class="card-sub">
           <select id="trendMetric" class="inline-select">
             <option value="median">Median</option>
@@ -140,15 +158,22 @@
           across <span id="trendSlice" class="slice-badge">—</span>
         </p>
       </div>
-      <div class="chart-wrap">
-        <svg id="trendChart" class="chart" aria-label="Year trend"></svg>
+      <div class="chart-view">
+        <div class="chart-wrap">
+          <svg id="trendChart" class="chart" aria-label="Year trend"></svg>
+        </div>
       </div>
+      <div class="table-view" id="trendTable"></div>
     </section>
 
     <!-- Compare income types YoY -->
-    <section class="card chartcard" aria-label="Compare income types year by year">
+    <section class="card chartcard" aria-label="Compare income types year by year" data-view="chart">
       <div class="card-head">
         <h2>🔬 Compare income types</h2>
+        <div class="view-toggle" data-target="compare" role="tablist" aria-label="View as">
+          <button class="vt-btn active" data-view="chart" type="button">Chart</button>
+          <button class="vt-btn" data-view="table" type="button">Table</button>
+        </div>
         <p class="card-sub">
           <select id="compareMetric" class="inline-select">
             <option value="median">Median</option>
@@ -162,19 +187,29 @@
         </p>
       </div>
       <div class="type-pills" id="typePills"></div>
-      <div class="chart-wrap">
-        <svg id="compareChart" class="chart" aria-label="Type comparison"></svg>
+      <div class="chart-view">
+        <div class="chart-wrap">
+          <svg id="compareChart" class="chart" aria-label="Type comparison"></svg>
+        </div>
+        <div class="compare-empty" id="compareEmpty" hidden>Pick at least one income type above to draw the chart.</div>
       </div>
-      <div class="compare-empty" id="compareEmpty" hidden>Pick at least one income type above to draw the chart.</div>
+      <div class="table-view" id="compareTable"></div>
     </section>
 
     <!-- Type breakdown -->
-    <section class="card chartcard" aria-label="Income type comparison">
+    <section class="card chartcard" aria-label="Income type comparison" data-view="chart">
       <div class="card-head">
         <h2>🔀 Income types</h2>
+        <div class="view-toggle" data-target="breakdown" role="tablist" aria-label="View as">
+          <button class="vt-btn active" data-view="chart" type="button">Chart</button>
+          <button class="vt-btn" data-view="table" type="button">Table</button>
+        </div>
         <p class="card-sub">How many people receive each type of income for the selected year &amp; month.</p>
       </div>
-      <div id="typeBreakdown" class="type-breakdown"></div>
+      <div class="chart-view">
+        <div id="typeBreakdown" class="type-breakdown"></div>
+      </div>
+      <div class="table-view" id="breakdownTable"></div>
     </section>
 
     <!-- Insights -->

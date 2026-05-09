@@ -213,17 +213,128 @@ body {
   background: linear-gradient(120deg, rgba(255,255,255,0.04), transparent 40%);
   pointer-events: none;
 }
-.card-head { margin-bottom: 14px; }
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 14px;
+}
 .card-head h2 {
-  margin: 0 0 4px;
+  margin: 0;
   font-size: 17px;
   letter-spacing: -0.01em;
   font-weight: 800;
 }
 .card-sub {
   margin: 0;
+  flex-basis: 100%;
   font-size: 13px;
   color: var(--text-dim);
+}
+
+/* segmented chart/table view toggle */
+.view-toggle {
+  display: inline-flex;
+  padding: 3px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.vt-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text-dim);
+  padding: 5px 12px;
+  font: inherit; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+  cursor: pointer;
+  min-height: 28px;
+  transition: background .15s ease, color .15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.vt-btn.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #0a0c1a;
+}
+.vt-btn:not(.active):hover { color: var(--text); background: rgba(255,255,255,0.05); }
+
+/* show/hide chart vs table based on parent state */
+.chartcard[data-view="chart"] .table-view { display: none; }
+.chartcard[data-view="table"] .chart-view { display: none; }
+.chartcard[data-view="table"] .type-pills { display: flex; } /* keep filters visible in table mode for compare */
+
+/* data table styling */
+.table-view {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.18);
+  border: 1px solid var(--border);
+  -webkit-overflow-scrolling: touch;
+}
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  min-width: 320px;
+}
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgba(20, 24, 50, 0.96);
+  color: var(--text-mute);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: right;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-strong);
+  white-space: nowrap;
+}
+.data-table thead th:first-child { text-align: left; }
+.data-table tbody td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  white-space: nowrap;
+  color: var(--text);
+}
+.data-table tbody td:first-child {
+  text-align: left;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+.data-table tbody tr:hover td { background: rgba(255,255,255,0.04); }
+.data-table tbody tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
+.data-table tbody tr.highlight td { background: rgba(124,92,255,0.14); color: var(--text); }
+.data-table .swatch {
+  display: inline-block;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.data-table caption {
+  caption-side: top;
+  text-align: left;
+  padding: 10px 12px 4px;
+  font-size: 12px;
+  color: var(--text-mute);
+}
+.table-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-mute);
+  font-size: 13px;
 }
 
 /* ─── Stat cards ─────────────────────────────────────────── */
