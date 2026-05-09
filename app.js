@@ -1033,27 +1033,37 @@
   // Trend metric also needs to update its table
   $("#trendMetric").addEventListener("change", () => { renderTrendTable(); });
 
-  // Chart ↔ Table view toggles
-  $$(".view-toggle").forEach((toggle) => {
-    toggle.addEventListener("click", (e) => {
-      const btn = e.target.closest(".vt-btn");
-      if (!btn) return;
-      const view = btn.dataset.view;
-      const card = toggle.closest(".chartcard");
-      card.dataset.view = view;
-      toggle.querySelectorAll(".vt-btn").forEach((b) => b.classList.toggle("active", b === btn));
-      // If switching back to chart view, the chart may have rendered with a stale 0×0 size
-      // (because the container was display:none). Re-draw to fit current dimensions.
-      if (view === "chart") {
-        const target = toggle.dataset.target;
-        const record = findRecord(state.year, state.month, state.type);
-        if (!record) return;
-        const summary = summarize(record, D.ranges);
-        if (target === "hist") drawHistogram(record.b, D.ranges, summary);
-        else if (target === "lorenz") drawLorenz(summary);
-        else if (target === "trend") drawTrend();
-        else if (target === "compare") drawCompareChart();
-      }
+  // Chart ↔ Table view toggles. Bind directly to each button — more reliable on iOS
+  // than delegating through a parent container.
+  function setView(card, toggle, btn, view) {
+    card.dataset.view = view;
+    toggle.querySelectorAll(".vt-btn").forEach((b) => b.classList.toggle("active", b === btn));
+    if (view === "chart") {
+      const target = toggle.dataset.target;
+      const record = findRecord(state.year, state.month, state.type);
+      if (!record) return;
+      const summary = summarize(record, D.ranges);
+      // chart may have rendered with stale dims while container was display:none — redraw.
+      if (target === "hist") drawHistogram(record.b, D.ranges, summary);
+      else if (target === "lorenz") drawLorenz(summary);
+      else if (target === "trend") drawTrend();
+      else if (target === "compare") drawCompareChart();
+    }
+  }
+
+  $$(".vt-btn").forEach((btn) => {
+    const handler = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const toggle = btn.closest(".view-toggle");
+      const card = btn.closest(".chartcard");
+      if (!toggle || !card) return;
+      setView(card, toggle, btn, btn.dataset.view);
+    };
+    btn.addEventListener("click", handler);
+    // Belt-and-braces: also fire on pointerup so iOS can't drop it.
+    btn.addEventListener("pointerup", (e) => {
+      if (e.pointerType === "touch") handler(e);
     });
   });
 
