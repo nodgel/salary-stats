@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0b0d1a" />
+<title>Georgia Salary Atlas — interactive income statistics</title>
+<link rel="stylesheet" href="styles.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>" />
+</head>
+<body>
+  <div class="bg-fx" aria-hidden="true">
+    <div class="bg-blob blob-a"></div>
+    <div class="bg-blob blob-b"></div>
+    <div class="bg-blob blob-c"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">📊</span>
+      <div>
+        <h1>Salary Atlas</h1>
+        <p class="tagline">Georgia's income, decoded · 2016–2026</p>
+      </div>
+    </div>
+    <button class="chip" id="aboutBtn" aria-label="About this data">
+      <span class="chip-icon" aria-hidden="true">ⓘ</span><span>About</span>
+    </button>
+  </header>
+
+  <section class="filters" aria-label="Filters">
+    <label class="filter">
+      <span class="filter-label">Year</span>
+      <select id="filterYear" class="filter-select"></select>
+    </label>
+    <label class="filter">
+      <span class="filter-label">Month</span>
+      <select id="filterMonth" class="filter-select"></select>
+    </label>
+    <label class="filter">
+      <span class="filter-label">Type</span>
+      <select id="filterType" class="filter-select"></select>
+    </label>
+    <div class="filter-meta" id="filterMeta">—</div>
+  </section>
+
+  <main class="content">
+
+    <!-- Hero stats -->
+    <section class="cards" aria-label="Headline metrics">
+      <article class="card stat" data-tone="people">
+        <div class="stat-icon">👥</div>
+        <div class="stat-label">People</div>
+        <div class="stat-value" id="kpiPeople">—</div>
+        <div class="stat-sub" id="kpiPeopleSub"></div>
+      </article>
+      <article class="card stat" data-tone="median">
+        <div class="stat-icon">⚖️</div>
+        <div class="stat-label">Median income</div>
+        <div class="stat-value" id="kpiMedian">—</div>
+        <div class="stat-sub" id="kpiMedianSub">per person</div>
+      </article>
+      <article class="card stat" data-tone="mean">
+        <div class="stat-icon">📈</div>
+        <div class="stat-label">Mean income</div>
+        <div class="stat-value" id="kpiMean">—</div>
+        <div class="stat-sub" id="kpiMeanSub">per person</div>
+      </article>
+      <article class="card stat" data-tone="gini">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-label">Gini coefficient</div>
+        <div class="stat-value" id="kpiGini">—</div>
+        <div class="stat-sub" id="kpiGiniSub">income inequality</div>
+      </article>
+    </section>
+
+    <!-- Where do you stand? -->
+    <section class="card whereistand" aria-label="Where do you stand">
+      <div class="card-head">
+        <h2>🪞 Where do you stand?</h2>
+        <p class="card-sub">Type a monthly income to see your percentile in the selected slice.</p>
+      </div>
+      <div class="stand-row">
+        <div class="stand-input">
+          <span class="currency">₾</span>
+          <input id="standInput" type="number" inputmode="decimal" min="0" step="50" placeholder="e.g. 2500" />
+        </div>
+        <div class="stand-result" id="standResult">
+          <span class="stand-pct">—</span>
+          <span class="stand-msg">enter an amount</span>
+        </div>
+      </div>
+      <div class="stand-bar"><div class="stand-bar-fill" id="standBarFill"></div><div class="stand-bar-marker" id="standBarMarker"></div></div>
+      <div class="stand-scale">
+        <span>0</span><span>p25</span><span>median</span><span>p75</span><span>p90</span><span>top</span>
+      </div>
+    </section>
+
+    <!-- Distribution histogram -->
+    <section class="card chartcard" aria-label="Distribution">
+      <div class="card-head">
+        <h2>📐 Income distribution</h2>
+        <p class="card-sub">Number of people in each income bracket. Tap a bar for details.</p>
+      </div>
+      <div class="chart-wrap">
+        <svg id="histChart" class="chart" aria-label="Histogram"></svg>
+      </div>
+      <div class="chart-legend">
+        <span class="legend-pill"><span class="dot" style="background:var(--accent)"></span>Population</span>
+        <span class="legend-pill"><span class="dot" style="background:var(--accent-2)"></span>Selected bracket</span>
+      </div>
+      <div id="bracketDetail" class="bracket-detail" hidden></div>
+    </section>
+
+    <!-- Lorenz curve -->
+    <section class="card chartcard" aria-label="Lorenz curve">
+      <div class="card-head">
+        <h2>📉 Inequality (Lorenz curve)</h2>
+        <p class="card-sub">How far the income share strays from a perfectly equal line. The bigger the gap, the higher the Gini.</p>
+      </div>
+      <div class="chart-wrap square">
+        <svg id="lorenzChart" class="chart" viewBox="0 0 400 400" aria-label="Lorenz curve"></svg>
+      </div>
+      <div class="lorenz-stats" id="lorenzStats"></div>
+    </section>
+
+    <!-- Year trend -->
+    <section class="card chartcard" aria-label="Year trend">
+      <div class="card-head">
+        <h2>📅 Across the years</h2>
+        <p class="card-sub">
+          <select id="trendMetric" class="inline-select">
+            <option value="median">Median</option>
+            <option value="mean">Mean</option>
+            <option value="gini">Gini</option>
+            <option value="people">People</option>
+            <option value="p90">90th percentile</option>
+          </select>
+          across <span id="trendSlice" class="slice-badge">—</span>
+        </p>
+      </div>
+      <div class="chart-wrap">
+        <svg id="trendChart" class="chart" aria-label="Year trend"></svg>
+      </div>
+    </section>
+
+    <!-- Compare income types YoY -->
+    <section class="card chartcard" aria-label="Compare income types year by year">
+      <div class="card-head">
+        <h2>🔬 Compare income types</h2>
+        <p class="card-sub">
+          <select id="compareMetric" class="inline-select">
+            <option value="median">Median</option>
+            <option value="mean">Mean</option>
+            <option value="gini">Gini</option>
+            <option value="people">People</option>
+            <option value="p90">90th percentile</option>
+            <option value="totalIncome">Total income</option>
+          </select>
+          year-by-year for <span id="compareMonth" class="slice-badge">—</span> · tap a pill to toggle a series
+        </p>
+      </div>
+      <div class="type-pills" id="typePills"></div>
+      <div class="chart-wrap">
+        <svg id="compareChart" class="chart" aria-label="Type comparison"></svg>
+      </div>
+      <div class="compare-empty" id="compareEmpty" hidden>Pick at least one income type above to draw the chart.</div>
+    </section>
+
+    <!-- Type breakdown -->
+    <section class="card chartcard" aria-label="Income type comparison">
+      <div class="card-head">
+        <h2>🔀 Income types</h2>
+        <p class="card-sub">How many people receive each type of income for the selected year &amp; month.</p>
+      </div>
+      <div id="typeBreakdown" class="type-breakdown"></div>
+    </section>
+
+    <!-- Insights -->
+    <section class="card" aria-label="Insights">
+      <div class="card-head">
+        <h2>💡 Insights</h2>
+      </div>
+      <ul id="insights" class="insights"></ul>
+    </section>
+
+    <!-- Top & bottom -->
+    <section class="cards two">
+      <article class="card mini" data-tone="top">
+        <div class="mini-label">Top 10% earn</div>
+        <div class="mini-value" id="kpiTop10">—</div>
+        <div class="mini-sub">of all income</div>
+      </article>
+      <article class="card mini" data-tone="bottom">
+        <div class="mini-label">Bottom 50% earn</div>
+        <div class="mini-value" id="kpiBottom50">—</div>
+        <div class="mini-sub">of all income</div>
+      </article>
+    </section>
+
+  </main>
+
+  <footer class="foot">
+    <p>Source: Revenue Service of Georgia (rs.ge). Brackets are right-open: <em>[lo, hi)</em>.<br>
+    Median and percentiles use linear interpolation within brackets. The top bracket (>₾100,000) is approximated using the bracket's mean.</p>
+  </footer>
+
+  <div class="modal" id="aboutModal" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>About this dashboard</h3>
+        <button class="ghost-btn" id="closeAbout">Close</button>
+      </div>
+      <div class="modal-body">
+        <p>This is an interactive view of monthly and annual income statistics published by Georgia's Revenue Service (rs.ge). Use the filters to slice by year, month and income type, then explore distribution, inequality and trends.</p>
+        <h4>Glossary</h4>
+        <ul>
+          <li><strong>Median</strong> — the income that splits the population in half. Half earn less, half earn more.</li>
+          <li><strong>Mean</strong> — total taxable income divided by people. Pulled up by very high earners.</li>
+          <li><strong>Gini coefficient</strong> — 0 means everyone earns the same, 1 means one person has everything. Most countries land between 0.25 and 0.55.</li>
+          <li><strong>Lorenz curve</strong> — plots cumulative income share vs cumulative population share. The diagonal is perfect equality.</li>
+          <li><strong>Percentile</strong> — pX means X% of people earn less than this amount.</li>
+        </ul>
+        <h4>Caveats</h4>
+        <ul>
+          <li>The data is bracketed, so all percentile calculations linearly interpolate within a bracket.</li>
+          <li>The open-ended top bracket (&gt;₾100,000) is anchored by its average — actual top-percentile values may be higher.</li>
+          <li>Income marked "All" sums every reported income type. "Salary" is wages only.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
