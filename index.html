@@ -24,9 +24,14 @@
         <p class="tagline">interactive income statistics · 2016–2026</p>
       </div>
     </div>
-    <button class="chip" id="aboutBtn" aria-label="About this data">
-      <span class="chip-icon" aria-hidden="true">ⓘ</span><span>About</span>
-    </button>
+    <div class="topbar-actions">
+      <button class="chip" id="pdfBtn" aria-label="Download as PDF report">
+        <span class="chip-icon" aria-hidden="true">📄</span><span>Save PDF</span>
+      </button>
+      <button class="chip" id="aboutBtn" aria-label="About this data">
+        <span class="chip-icon" aria-hidden="true">ⓘ</span><span>About</span>
+      </button>
+    </div>
   </header>
 
   <section class="filters" aria-label="Filters">
@@ -47,8 +52,35 @@
 
   <main class="content">
 
+    <!-- Print-only cover & TOC (hidden on screen, shown when printing/saving as PDF) -->
+    <section class="print-cover" aria-hidden="true">
+      <div class="pc-brand">📊 Average Income in Georgia</div>
+      <div class="pc-title">Income Statistics Report</div>
+      <div class="pc-slice" id="printSlice">—</div>
+      <div class="pc-meta">
+        <div><span class="pc-key">Generated</span><span id="printDate">—</span></div>
+        <div><span class="pc-key">Source</span>Revenue Service of Georgia (rs.ge)</div>
+        <div><span class="pc-key">Population</span><span id="printPop">—</span></div>
+        <div><span class="pc-key">Total income</span><span id="printTotal">—</span></div>
+      </div>
+      <nav class="print-toc" aria-label="Table of contents">
+        <h3>Contents</h3>
+        <ol>
+          <li><a href="#sec-kpi">Headline metrics</a></li>
+          <li><a href="#sec-insights">Insights</a></li>
+          <li><a href="#sec-hist">Income distribution</a></li>
+          <li><a href="#sec-lorenz">Inequality (Lorenz curve)</a></li>
+          <li><a href="#sec-trend">Across the years</a></li>
+          <li><a href="#sec-compare">Compare income types</a></li>
+          <li><a href="#sec-breakdown">Income type breakdown</a></li>
+          <li><a href="#sec-topbot">Top &amp; bottom shares</a></li>
+        </ol>
+        <p class="pc-tip">Tip: links above are clickable in the PDF.</p>
+      </nav>
+    </section>
+
     <!-- Hero stats -->
-    <section class="cards" aria-label="Headline metrics">
+    <section class="cards" id="sec-kpi" aria-label="Headline metrics">
       <article class="card stat" data-tone="people">
         <div class="stat-icon">👥</div>
         <div class="stat-label">People</div>
@@ -98,7 +130,7 @@
     </section>
 
     <!-- Distribution histogram -->
-    <section class="card chartcard" aria-label="Distribution" data-view="chart">
+    <section class="card chartcard" id="sec-hist" aria-label="Distribution" data-view="chart">
       <div class="card-head">
         <h2>📐 Income distribution</h2>
         <div class="view-toggle" data-target="hist" role="tablist" aria-label="View as">
@@ -121,7 +153,7 @@
     </section>
 
     <!-- Lorenz curve -->
-    <section class="card chartcard" aria-label="Lorenz curve" data-view="chart">
+    <section class="card chartcard" id="sec-lorenz" aria-label="Lorenz curve" data-view="chart">
       <div class="card-head">
         <h2>📉 Inequality (Lorenz curve)</h2>
         <div class="view-toggle" data-target="lorenz" role="tablist" aria-label="View as">
@@ -140,7 +172,7 @@
     </section>
 
     <!-- Year trend -->
-    <section class="card chartcard" aria-label="Year trend" data-view="chart">
+    <section class="card chartcard" id="sec-trend" aria-label="Year trend" data-view="chart">
       <div class="card-head">
         <h2>📅 Across the years</h2>
         <div class="view-toggle" data-target="trend" role="tablist" aria-label="View as">
@@ -167,7 +199,7 @@
     </section>
 
     <!-- Compare income types YoY -->
-    <section class="card chartcard" aria-label="Compare income types year by year" data-view="chart">
+    <section class="card chartcard" id="sec-compare" aria-label="Compare income types year by year" data-view="chart">
       <div class="card-head">
         <h2>🔬 Compare income types</h2>
         <div class="view-toggle" data-target="compare" role="tablist" aria-label="View as">
@@ -197,7 +229,7 @@
     </section>
 
     <!-- Type breakdown -->
-    <section class="card chartcard" aria-label="Income type comparison" data-view="chart">
+    <section class="card chartcard" id="sec-breakdown" aria-label="Income type comparison" data-view="chart">
       <div class="card-head">
         <h2>🔀 Income types</h2>
         <div class="view-toggle" data-target="breakdown" role="tablist" aria-label="View as">
@@ -213,7 +245,7 @@
     </section>
 
     <!-- Insights -->
-    <section class="card" aria-label="Insights">
+    <section class="card" id="sec-insights" aria-label="Insights">
       <div class="card-head">
         <h2>💡 Insights</h2>
       </div>
@@ -221,7 +253,7 @@
     </section>
 
     <!-- Top & bottom -->
-    <section class="cards two">
+    <section class="cards two" id="sec-topbot">
       <article class="card mini" data-tone="top">
         <div class="mini-label">Top 10% earn</div>
         <div class="mini-value" id="kpiTop10">—</div>

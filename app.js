@@ -1082,6 +1082,51 @@
   $("#closeAbout").addEventListener("click", () => { $("#aboutModal").hidden = true; });
   $("#aboutModal").addEventListener("click", (e) => { if (e.target.id === "aboutModal") $("#aboutModal").hidden = true; });
 
+  /* ─── PDF / Print ─────────────────────────────────────── */
+  function refreshPrintCover() {
+    const record = findRecord(state.year, state.month, state.type);
+    if (!record) return;
+    const summary = summarize(record, D.ranges);
+    $("#printSlice").textContent = `${state.type} · ${state.month} ${state.year}`;
+    const today = new Date();
+    $("#printDate").textContent = today.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    $("#printPop").textContent = nfInt.format(summary.n) + " people";
+    $("#printTotal").textContent = fmtMoneyExact(summary.totalIncome);
+  }
+
+  function preparePrint() {
+    refreshPrintCover();
+    // Re-render every chart so SVGs use print-sized dimensions (chart-wrap height changes
+    // from screen to ~80mm via @media print rules). Both views are visible during print, so
+    // we don't need to flip toggles.
+    const record = findRecord(state.year, state.month, state.type);
+    if (!record) return;
+    const summary = summarize(record, D.ranges);
+    drawHistogram(record.b, D.ranges, summary);
+    drawLorenz(summary);
+    drawTrend();
+    drawCompareChart();
+  }
+
+  $("#pdfBtn").addEventListener("click", () => {
+    preparePrint();
+    // Give the browser a tick to apply layout/CSS before opening the dialog.
+    setTimeout(() => window.print(), 50);
+  });
+
+  // Modern browsers fire beforeprint when Cmd/Ctrl-P is used directly.
+  window.addEventListener("beforeprint", preparePrint);
+  // Re-render once we're back to screen so charts fit screen container again.
+  window.addEventListener("afterprint", () => {
+    const record = findRecord(state.year, state.month, state.type);
+    if (!record) return;
+    const summary = summarize(record, D.ranges);
+    drawHistogram(record.b, D.ranges, summary);
+    drawLorenz(summary);
+    drawTrend();
+    drawCompareChart();
+  });
+
   // Initial render
   render();
 
