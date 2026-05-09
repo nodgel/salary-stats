@@ -93,7 +93,8 @@ body {
 }
 .brand h1 {
   margin: 0;
-  font-size: 22px;
+  font-size: 18px;
+  line-height: 1.15;
   font-weight: 800;
   letter-spacing: -0.02em;
   background: linear-gradient(90deg, #fff, #b8b3ff);
@@ -607,7 +608,7 @@ body {
 /* ─── Responsive: desktop ────────────────────────────────── */
 @media (min-width: 960px) {
   .topbar { padding: 24px 28px 14px; }
-  .brand h1 { font-size: 26px; }
+  .brand h1 { font-size: 24px; }
   .content { padding: 0 24px 40px; gap: 20px; }
   .filters { padding: 14px 18px; margin: 6px 16px 24px; }
   .stat-value { font-size: 30px; }
